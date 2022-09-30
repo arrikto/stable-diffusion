@@ -200,8 +200,11 @@ class DataModuleFromConfig(pl.LightningDataModule):
             init_fn = worker_init_fn
         else:
             init_fn = None
+        # set the shuffle to False for training in a smaller dataset.
+        # This is because while shuffling the dataset, the sampler might
+        # return an index that is out of bounds.
         return DataLoader(self.datasets["train"], batch_size=self.batch_size,
-                          num_workers=self.num_workers, shuffle=False if is_iterable_dataset else True,
+                          num_workers=self.num_workers, shuffle=False,
                           worker_init_fn=init_fn)
 
     def _val_dataloader(self, shuffle=False):
@@ -618,9 +621,9 @@ if __name__ == "__main__":
                     # "log_momentum": True
                 }
             },
-            "cuda_callback": {
-                "target": "main.CUDACallback"
-            },
+            # "cuda_callback": {
+            #     "target": "main.CUDACallback"
+            # },
         }
         if version.parse(pl.__version__) >= version.parse('1.4.0'):
             default_callbacks_cfg.update({'checkpoint_callback': modelckpt_cfg})
